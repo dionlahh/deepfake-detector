@@ -165,3 +165,22 @@ __pycache__
 .DS_Store
 .vscode
 models
+Split Data
+Working Model
+*.zip
+train1
+
+*.pdf
+.vscode
+__pycache__
+*frames
+.DS_Store
+Split Data
+Tuning
+Benchmark Models
+data
+History
+Result
+*.hdf5
+traintozip
+Training Data

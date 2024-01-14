@@ -1,90 +1,166 @@
 import cv2
-import dlib
 import os
+import dlib
+import numpy as np
+from PIL import Image
 
 
-def has_face(frame):
-    # Load the Dlib face detector
-    detector = dlib.get_frontal_face_detector()
+def has_face_haar_cascade(frame):
+    # Load the pre-trained Haar Cascade face detector
+    face_cascade = cv2.CascadeClassifier(
+        cv2.data.haarcascades + "haarcascade_frontalface_default.xml"
+    )
 
     # Convert the frame to grayscale for face detection
     gray_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
 
     # Detect faces in the frame
-    faces = detector(gray_frame)
+    faces = face_cascade.detectMultiScale(
+        gray_frame, scaleFactor=1.1, minNeighbors=5, minSize=(30, 30)
+    )
 
     # Return True if at least one face is detected
     return len(faces) > 0
 
 
-def extract_frames(input_folder, output_folder, faked=True):
-    manipulated = "faked" if faked else "original"
-    video_index = 0
+def verify_face_dlib(folder_path, show_progress=True):
+    # Create a face detector
+    face_detector = dlib.get_frontal_face_detector()
 
+    # Get the total number of images in the folder
+    image_files = [
+        f
+        for f in os.listdir(folder_path)
+        if f.endswith((".jpg", ".jpeg", ".png", ".gif"))
+    ]
+    total_images = len(image_files)
+
+    # Counter for the processed images
+    processed_images = 0
+
+    # Iterate through all files in the specified folder
+    for filename in image_files:
+        file_path = os.path.join(folder_path, filename)
+
+        # Load the image using PIL (Python Imaging Library)
+        img = Image.open(file_path)
+
+        # Convert the PIL image to a numpy array for dlib
+        img_array = np.array(img)
+
+        # Use the face detector to find faces in the image
+        faces = face_detector(img_array)
+
+        # If no faces are detected, delete the image
+        if len(faces) == 0:
+            if show_progress == True:
+                print(f"No face detected in {filename}. Deleting the image.")
+            os.remove(file_path)
+
+        # Update progress
+        processed_images += 1
+        progress_percentage = (processed_images / total_images) * 100
+        if show_progress == True:
+            print(
+                f"Progress: {processed_images}/{total_images} images processed ({progress_percentage:.2f}%)"
+            )
+
+
+def save_faces_from_directory(input_folder, output_folder):
     # Create the output folder if it doesn't exist
     if not os.path.exists(output_folder):
         os.makedirs(output_folder)
 
-    # Loop through all files and subdirectories in the input folder
-    for root, dirs, files in os.walk(input_folder):
-        for file_name in files:
-            file_path = os.path.join(root, file_name)
+    # Detect faces in each frame in the input folder
+    for file_name in os.listdir(input_folder):
+        frame_path = os.path.join(input_folder, file_name)
 
-            # Check if it's a video file
-            if file_name.lower().endswith((".mp4", ".avi", ".mov", ".mkv")):
-                print(f"Processing video: {file_name} | ", end="")
+        # Read the frame
+        frame = cv2.imread(frame_path)
 
-                # Open the video file
-                cap = cv2.VideoCapture(file_path)
+        # Check if the frame has a face using the has_face function
+        if has_face_haar_cascade(frame):
+            # Get the base name of the original frame file
+            image_name = os.path.splitext(file_name)[0]
 
-                # Get the total number of frames in the video
-                total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
+            # Detect faces in the frame
+            face_cascade = cv2.CascadeClassifier(
+                cv2.data.haarcascades + "haarcascade_frontalface_default.xml"
+            )
+            gray_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+            faces = face_cascade.detectMultiScale(
+                gray_frame,
+                scaleFactor=1.1,
+                minNeighbors=5,
+                minSize=(30, 30),
+            )
 
-                # Calculate frame indices for 25%, 50%, and 75%
-                frame_indices = [
-                    int(0.25 * total_frames),
-                    int(0.5 * total_frames),
-                    int(0.75 * total_frames),
-                ]
+            # Crop and save the image for each detected face
+            for i, (x, y, w, h) in enumerate(faces):
+                face_image = frame[y : y + h, x : x + w]
+                cropped_frame_filename = f"{output_folder}/{image_name}_face_{i}.jpg"
+                cv2.imwrite(cropped_frame_filename, face_image)
 
-                # Loop through frames and extract frames at the specified indices
-                saved_count = 0
-                for frame_index in frame_indices:
-                    cap.set(cv2.CAP_PROP_POS_FRAMES, frame_index)
-                    ret, frame = cap.read()
 
-                    if ret:
-                        # Check if the frame has a face
-                        if has_face(frame):
-                            # Detect faces in the frame
-                            detector = dlib.get_frontal_face_detector()
-                            gray_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-                            faces = detector(gray_frame)
+def extract_face(input_dir, output_dir):
+    save_faces_from_directory(input_dir, output_dir)
+    verify_face_dlib(output_dir)
 
-                            # Check if faces are detected
-                            if faces:
-                                # Crop and save the image for each detected face
-                                for i, face in enumerate(faces):
-                                    x, y, w, h = (
-                                        face.left(),
-                                        face.top(),
-                                        face.width(),
-                                        face.height(),
-                                    )
-                                    face_image = frame[y : y + h, x : x + w]
 
-                                    # Check if face_image is not empty before saving
-                                    if face_image is not None and face_image.size != 0:
-                                        cropped_frame_filename = f"{output_folder}/{manipulated}_frame_{video_index}_{frame_index}_face_{i}.jpg"
-                                        cv2.imwrite(cropped_frame_filename, face_image)
-                                        saved_count += 1
+def save_faces_from_image(image_path, output_folder):
+    # Create the output folder if it doesn't exist
+    if not os.path.exists(output_folder):
+        os.makedirs(output_folder)
 
-                # Release the video capture object
-                cap.release()
+    # Read the image
+    image = cv2.imread(image_path)
 
-                print(f"Saved {saved_count} frames")
+    # Check if the image has a face using the has_face function
+    if has_face_haar_cascade(image):
+        # Get the base name of the original image file
+        image_name = os.path.splitext(os.path.basename(image_path))[0]
 
-                # Increment the video index
-                video_index += 1
+        # Detect faces in the image
+        face_cascade = cv2.CascadeClassifier(
+            cv2.data.haarcascades + "haarcascade_frontalface_default.xml"
+        )
+        gray_image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+        faces = face_cascade.detectMultiScale(
+            gray_image,
+            scaleFactor=1.1,
+            minNeighbors=5,
+            minSize=(30, 30),
+        )
 
-    print("Frames extraction from all videos completed.")
+        # Crop and save the image for each detected face
+        for i, (x, y, w, h) in enumerate(faces):
+            face_image = image[y : y + h, x : x + w]
+            cropped_image_filename = f"{output_folder}/{image_name}_face_{i}.jpg"
+            cv2.imwrite(cropped_image_filename, face_image)
+
+        # Verify faces using dlib
+        verify_face_dlib(output_folder, show_progress=False)
+
+
+def count_jpg_files(folder_path):
+    """
+    Count the number of JPG files in the specified folder.
+
+    Parameters:
+    - folder_path (str): The path to the folder.
+
+    Returns:
+    - int: The number of JPG files in the folder.
+    """
+    # Ensure the folder path exists
+    if not os.path.exists(folder_path):
+        print(f"Error: Folder '{folder_path}' does not exist.")
+        return 0
+
+    # List all files in the folder
+    all_files = os.listdir(folder_path)
+
+    # Count the number of JPG files
+    jpg_files = [file for file in all_files if file.lower().endswith(".jpg")]
+
+    return len(jpg_files)
