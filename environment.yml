@@ -1,0 +1,12 @@
+name: fyp
+channels:
+  - conda-forge
+  - menpo
+  - defaults
+dependencies:
+  - jupyter
+  - dlib
+  - tensorflow
+  - timm
+  - keras-tuner
+prefix: /Users/dion/anaconda3/envs/fyp

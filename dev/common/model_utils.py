@@ -8,7 +8,7 @@ import gc
 import os
 
 from keras.models import Sequential
-from keras.layers import Dense, Flatten, InputLayer
+from keras.layers import Dense, Flatten, InputLayer, Dropout
 from keras import optimizers
 
 
@@ -31,7 +31,7 @@ def input_size(model_type: str):
     return models.get(model_type, None)
 
 # Model Building
-def build_model(model_type: str, input_shape):
+def build_model(model_type: str, input_shape, hidden_layer_size, activation_function, dropout_rate, learning_rate):
     model = Sequential()
 
     # Add an InputLayer with the specified input shape
@@ -48,19 +48,19 @@ def build_model(model_type: str, input_shape):
     model.add(efficientnet_model)
 
     model.add(Flatten())
-    model.add(Dense(2, activation="relu"))
-    model.add(Dense(2, activation="softmax"))
-    model.layers[1].trainable = True  # train all the layers except the InputLayer
-    model.summary()
+    model.add(Dense(hidden_layer_size, activation=activation_function))
 
     optimizer = optimizers.Adam(
-        learning_rate=0.0001,
-        beta_1=0.9,
-        beta_2=0.999,
-        epsilon=1e-07,
-        amsgrad=False,
+        learning_rate=learning_rate,
         name="Adam",
     )
+    
+    # Add Dropout layer with specified dropout rate
+    # model.add(Dropout(rate=dropout_rate))
+    
+    model.add(Dense(2, activation="softmax"))
+    model.layers[0].trainable = False
+
     model.compile(
         optimizer=optimizer,
         loss="binary_crossentropy",
@@ -74,3 +74,6 @@ class ClearMemory(Callback):
     def on_epoch_end(self, epoch, logs=None):
         gc.collect()
         k.clear_session()
+
+if __name__ == "__main__":
+    print("Hello")
