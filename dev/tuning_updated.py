@@ -27,13 +27,13 @@ PROJECT_NAME = f"{MODEL_TYPE} Tuned"
 # Constant fields
 BATCH_SIZE = 16
 
-# Folder Paths
-landmark_models_folder = "/home/FYP/dion0020/deepfake-detector/dev/Landmark Models"
-models_folder = "/home/FYP/dion0020/deepfake-detector/dev/Benchmark Models"
-data_folder = "/home/FYP/dion0020/deepfake-detector/dev/Training Data"
-landmark_data_folder = "/home/FYP/dion0020/deepfake-detector/dev/Training Landmarks Data"
-tuning_folder = "/home/FYP/dion0020/deepfake-detector/dev/Tuning"
-landmark_tuning_folder = "/home/FYP/dion0020/deepfake-detector/dev/Landmark Tuning"
+# Folder Paths -- PLEASE PUT IN UR OWN CORRECCT DIRECTORIES
+landmark_models_folder = ".../dev/Landmark Models"
+models_folder = ".../dev/Benchmark Models"
+data_folder = ".../dev/Training Data"
+landmark_data_folder = ".../dev/Training Landmarks Data"
+tuning_folder = ".../dev/Tuning"
+landmark_tuning_folder = ".../dev/Landmark Tuning"
 
 size = input_size(MODEL_TYPE)
 imgsize = (size, size)

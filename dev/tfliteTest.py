@@ -1,9 +1,12 @@
 import numpy as np
+import pandas as pd
 import tensorflow as tf
 from tensorflow.keras.preprocessing.image import ImageDataGenerator
 from tensorflow.keras.applications import efficientnet as efn
 from common.model_utils import input_size
+from sklearn import metrics
 import os
+import json
 
 # Function to load TFLite model
 def load_tflite_model(model_path):
@@ -18,14 +21,16 @@ def preprocess_image(image_path, img_size):
     img_array = np.expand_dims(img_array, axis=0)
     return img_array
 
-data_folder = "/home/FYP/dion0020/deepfake-detector/dev/Training Data"
-landmark_data_folder = "/home/FYP/dion0020/deepfake-detector/dev/Training Landmarks Data"
-result_folder = "/home/FYP/dion0020/deepfake-detector/dev/Result"
-landmark_result_folder = "/home/FYP/dion0020/deepfake-detector/dev/Landmark Result"
-models_folder = "/home/FYP/dion0020/deepfake-detector/dev/Benchmark Models"
-landmark_models_folder = "/home/FYP/dion0020/deepfake-detector/dev/Landmark Models"
-tuning_folder = "/home/FYP/dion0020/deepfake-detector/dev/Tuning"
-landmark_tuning_folder = "/home/FYP/dion0020/deepfake-detector/dev/Landmark Tuning"
+
+# PLEASE PUT IN CORRECT FOLDER DIRECTORIES
+data_folder = ".../dev/Training Data"
+landmark_data_folder = ".../dev/Training Landmarks Data"
+result_folder = ".../dev/Result"
+landmark_result_folder = ".../dev/Landmark Result"
+models_folder = ".../dev/Benchmark Models"
+landmark_models_folder = ".../dev/Landmark Models"
+tuning_folder = ".../dev/Tuning"
+landmark_tuning_folder = ".../dev/Landmark Tuning"
 
 model_path = "tflite/BaseB0.tflite"
 model_type = "BaseB0"
@@ -44,7 +49,7 @@ if __name__ == "__main__":
         result_dir = result_folder
 
     test_path = os.path.join(".", data_dir, "Test")
-    model_dir = "/home/FYP/dion0020/deepfake-detector/dev/tflite"
+    model_dir = ".../dev/tflite"
     model_path = os.path.join(model_dir, "BaseB0.tflite")
     model = load_tflite_model(model_path)
 
@@ -94,7 +99,7 @@ if __name__ == "__main__":
     print("AUC:", auc)
 
     # Save results to CSV
-    result_dir = "/home/FYP/dion0020/deepfake-detector/dev/tflite/results"
+    result_dir = ".../dev/tflite/results"
     filenames = [os.path.split(i)[1] for i in test_generator.filenames]
     actual_labels = [os.path.split(i)[0] for i in test_generator.filenames]
     actual_labels = ["0" if label == "manipulated" else "1" for label in actual_labels]

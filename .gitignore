@@ -177,7 +177,6 @@ __pycache__
 .DS_Store
 Split Data
 Tuning
-Benchmark Models
 data
 History
 Result
@@ -186,8 +185,6 @@ traintozip
 Training Data
 Training Landmarks Data
 Landmark History
-Landmark Models
 Landmark Result
 Landmark Tuning
 jobs
-tflite
