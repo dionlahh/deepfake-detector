@@ -179,12 +179,10 @@ Split Data
 Tuning
 data
 History
-Result
-*.hdf5
 traintozip
 Training Data
 Training Landmarks Data
+*.hdf5
 Landmark History
-Landmark Result
 Landmark Tuning
 jobs
